@@ -1,7 +1,7 @@
 import express from 'express';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
-import { apiRouter } from './src/server/routes.ts';
+import { apiRouter } from './src/server/routes';
 import { seedDatabase, seedMachineryIfEmpty } from './src/db/seed.ts';
 
 async function startServer() {
