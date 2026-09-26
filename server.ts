@@ -1,50 +1,32 @@
 import express from 'express';
 import path from 'path';
-import { createServer as createViteServer } from 'vite';
 import { apiRouter } from './src/server/routes';
-import { seedDatabase, seedMachineryIfEmpty } from './src/db/seed.ts';
+import { seedDatabase, seedMachineryIfEmpty } from './src/db/seed';
 
-async function startServer() {
-  const app = express();
-  const PORT = 3000;
+const app = express();
 
-  // JSON middleware
-  app.use(express.json());
+// JSON middleware
+app.use(express.json());
 
-  // Health check
-  app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', service: 'Construction Site Management System' });
-  });
+// Health check
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', service: 'Construction Site Management System' });
+});
 
-  // Mount API Router
-  app.use('/api', apiRouter);
+// Mount API Router
+app.use('/api', apiRouter);
 
-  // Initialize and seed database if necessary
-  try {
-    await seedDatabase();
-    await seedMachineryIfEmpty();
-  } catch (err) {
-    console.error('Failed to seed initial data:', err);
-  }
+// Initialize and seed database if necessary (chạy bất đồng bộ ngầm không chặn khởi động serverless)
+seedDatabase().catch((err) => console.error('Failed to seed initial data:', err));
+seedMachineryIfEmpty().catch((err) => console.error('Failed to seed machinery:', err));
 
-  // Vite middleware for development vs static build in production
-  if (process.env.NODE_ENV !== 'production') {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: 'spa',
-    });
-    app.use(vite.middlewares);
-  } else {
-    const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath));
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
-    });
-  }
+// Static build serving for production on Vercel
+const distPath = path.join(process.cwd(), 'dist');
+app.use(express.static(distPath));
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Construction Management System server running on http://0.0.0.0:${PORT}`);
-  });
-}
+app.get('*', (req, res) => {
+  res.sendFile(path.join(distPath, 'index.html'));
+});
 
-startServer();
+// Export app để Vercel chạy dưới dạng Serverless Function (Không dùng app.listen)
+export default app;
