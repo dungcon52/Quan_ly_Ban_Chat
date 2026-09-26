@@ -1,0 +1,6 @@
+{
+  "name": "Quản lý Thi công Công trường",
+  "description": "Hệ thống quản lý và tổng hợp thông tin thi công công trường, báo cáo ngày và tiến độ gói thầu",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
