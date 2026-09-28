@@ -1,9 +1,9 @@
 import express from 'express';
 import path from 'path';
 import { apiRouter } from './src/server/routes';
-import { seedDatabase, seedMachineryIfEmpty } from './src/db/seed';
 
 const app = express();
+const PORT = process.env.PORT || 3000;
 
 // JSON middleware
 app.use(express.json());
@@ -16,11 +16,10 @@ app.get('/api/health', (req, res) => {
 // Mount API Router
 app.use('/api', apiRouter);
 
-// Initialize and seed database if necessary (chạy bất đồng bộ ngầm không chặn khởi động serverless)
-seedDatabase().catch((err) => console.error('Failed to seed initial data:', err));
-seedMachineryIfEmpty().catch((err) => console.error('Failed to seed machinery:', err));
+// TẠM THỜI BỎ HẲN CÁC HÀM SEED TỰ ĐỘNG KHI KHỞI ĐỘNG SERVER
+// Điều này giúp server khởi động thành công 100% lên trạng thái Live mà không bị nghẽn mạng với Supabase.
 
-// Static build serving for production on Vercel
+// Production static files serving
 const distPath = path.join(process.cwd(), 'dist');
 app.use(express.static(distPath));
 
@@ -28,5 +27,7 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(distPath, 'index.html'));
 });
 
-// Export app để Vercel chạy dưới dạng Serverless Function (Không dùng app.listen)
-export default app;
+// Lắng nghe cổng PORT để chạy độc lập trên Render
+app.listen(Number(PORT), '0.0.0.0', () => {
+  console.log(`Construction Management System server running on port ${PORT}`);
+});
